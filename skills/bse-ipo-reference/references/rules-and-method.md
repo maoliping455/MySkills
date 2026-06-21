@@ -173,6 +173,8 @@ In a triggered case:
 
 Do not hard-code secondary-allocation boundaries such as `500万` or `520万`. Infer a fresh boundary for each IPO, then simplify the final table for users.
 
+Do not widen the boundary range merely to maximize apparent accuracy. Recent backtests of the regular-share threshold show that current-regime error is usually much tighter than old-regime history: use this as a precision discipline, not as a promise. In normal 2025/2026-style conditions, aim for a main actionable boundary around `8%-12%` wide; if uncertainty is wider than that, split the table into multiple rows rather than one broad catch-all range.
+
 Use three evidence layers:
 
 - Recent BSE result data: actual online subscription amount, allotment rate, account count if disclosed, issue size, top-subscription regular-share threshold, and any reconstructed secondary threshold from recent comparable IPOs.
@@ -198,8 +200,17 @@ Interpret supply pressure qualitatively:
 In final output, do not expose the full internal model unless the user asks. Collapse it into simple user-facing bands:
 
 - `< secondary_low`: `预计0股`
-- `secondary_low - secondary_high`: `边界博碎股`
+- `secondary_low - secondary_mid`: `低位试探碎股`
+- `secondary_mid - secondary_high`: `边界博碎股`
 - `secondary_high - 顶格`: `博100股碎股`
+
+Use these precision rules:
+
+- Keep `secondary_mid` as the main decision anchor.
+- If `secondary_low-high` is broad because sources disagree, say the evidence diverges and split it; do not present the whole span as equally useful.
+- If a single row would exceed about `50万` or about `10%-12%` of the midpoint, prefer splitting at `secondary_mid`.
+- If evidence is too weak to provide a useful band, say `碎股门槛不适合精确估计` and give only `顶格/不顶格` guidance.
+- If one source mentions several amounts, classify them before aggregation. Do not average a `放弃/陪跑` low-end number with the actual suggested boundary; use the source's main actionable boundary, usually the highest reachable amount below the subscription cap. Ignore amounts above the subscription cap for碎股 recommendation unless the text is explicitly discussing regular-share thresholds.
 
 Apply this priority order when creating bands:
 

@@ -354,8 +354,10 @@ def band_note(expected_result: str, regular_probability: float) -> str:
 def boundary_outcome(cash: float, boundary: SecondaryBoundary) -> tuple[str, str]:
     if cash < boundary.low_yuan:
         return "预计0股", "低于碎股低位参考"
+    if cash < boundary.mid_yuan:
+        return "低位试探碎股", "只覆盖边界下沿，命中依赖资金分布"
     if cash < boundary.high_yuan:
-        return "边界博碎股", "取决于最终门槛、资金分布和申购时间"
+        return "边界博碎股", "接近主流门槛，仍看资金分布和申购时间"
     return "博100股碎股", "相对更有效，但不保证"
 
 
@@ -446,7 +448,11 @@ def build_funding_bands(
 
     points: list[float] = [0.0, max_reference]
     if secondary_boundary is not None:
-        for boundary_value in (secondary_boundary.low_yuan, secondary_boundary.high_yuan):
+        for boundary_value in (
+            secondary_boundary.low_yuan,
+            secondary_boundary.mid_yuan,
+            secondary_boundary.high_yuan,
+        ):
             if 0 < boundary_value < max_reference:
                 points.append(boundary_value)
     if secondary_threshold is not None and 0 < secondary_threshold < max_reference:
@@ -642,8 +648,9 @@ def main() -> int:
     if calc0.secondary_threshold_yuan is not None:
         if secondary_boundary is not None:
             print(
-                f"碎股边界参考: {yuan(secondary_boundary.low_yuan)}-"
-                f"{yuan(secondary_boundary.high_yuan)}"
+                f"碎股边界参考: 低位{yuan(secondary_boundary.low_yuan)} / "
+                f"中位{yuan(secondary_boundary.mid_yuan)} / "
+                f"高位{yuan(secondary_boundary.high_yuan)}"
             )
         else:
             print(f"给定碎股门槛: {yuan(calc0.secondary_threshold_yuan)}")

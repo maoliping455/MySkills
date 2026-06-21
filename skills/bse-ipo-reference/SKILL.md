@@ -37,6 +37,7 @@ Never promise profit, guaranteed allotment, or capital safety. Do not help struc
    - Do not call a cash band "稳正股" unless it clears the crowded scenario's regular-share threshold; otherwise label it as a boundary or scenario-split result.
    - Use `--scenario-yi "情景:预计网上申购金额亿元:概率数字"` so the output can show different amount assumptions and their result probabilities.
    - Do not hard-code boundary amounts such as `500万` or `520万`. Derive the secondary-allocation boundary from recent BSE result data, community estimate clusters, and current-IPO supply pressure.
+   - Do not make the boundary band wide just to look safer. Balance hit rate and precision: output a low/mid/high boundary, split wide uncertainty into `低位试探碎股`, `边界博碎股`, and `博100股碎股`, and make the mid-high band the main actionable range.
    - Weight newer data more heavily. Use 2025-2026 and the latest 60-90 days as the main calibration window; treat 2020-2023 data as regime history rather than a direct tuning target unless market conditions clearly match.
    - When boundary evidence is available, pass `--secondary-boundary-yuan 低位 中位 高位`; the script keeps the internal model but outputs simple user-facing bands.
    - Regular-allotment thresholds take priority over secondary-allocation boundaries. Once a funding band reaches the 100-share regular threshold, label it as regular shares, not just 碎股.
