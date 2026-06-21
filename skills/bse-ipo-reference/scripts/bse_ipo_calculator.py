@@ -17,6 +17,7 @@ from typing import Iterable
 
 
 DEFAULT_FUNDS_YUAN = [1_000_000, 3_000_000, 5_000_000, 8_000_000, 10_000_000]
+DEFAULT_BOUNDARY_PRECISION_YUAN = 200_000
 
 
 def lot_floor(shares: float) -> int:
@@ -425,10 +426,69 @@ def exact_top_regular_band(
     )
 
 
+def compact_secondary_funding_bands(
+    *,
+    max_amount: float,
+    secondary_boundary: SecondaryBoundary,
+    precision_yuan: float,
+) -> list[FundingBand]:
+    if precision_yuan <= 0:
+        precision_yuan = DEFAULT_BOUNDARY_PRECISION_YUAN
+
+    if max_amount < secondary_boundary.low_yuan:
+        return [
+            FundingBand(
+                cash_range=f"=顶格{yuan(max_amount)}",
+                expected_result="顶格博碎股",
+                note="低于推算碎股低位，只能拼时间/排序",
+            )
+        ]
+
+    half_width = precision_yuan / 2.0
+    if secondary_boundary.high_yuan - secondary_boundary.low_yuan <= precision_yuan:
+        main_low = secondary_boundary.low_yuan
+        main_high = secondary_boundary.high_yuan
+    else:
+        main_low = max(secondary_boundary.low_yuan, secondary_boundary.mid_yuan - half_width)
+        main_high = min(secondary_boundary.high_yuan, secondary_boundary.mid_yuan + half_width)
+
+    main_low = max(0.0, min(main_low, max_amount))
+    main_high = max(main_low, min(main_high, max_amount))
+
+    bands: list[FundingBand] = []
+    if main_low > 0:
+        bands.append(
+            FundingBand(
+                cash_range=f"<{yuan(main_low)}",
+                expected_result="预计0股/低位试探",
+                note="低于主边界，不作为目标资金",
+            )
+        )
+    if main_high > main_low:
+        bands.append(
+            FundingBand(
+                cash_range=cash_range_label(main_low, main_high),
+                expected_result="边界博碎股",
+                note=f"主参考区间，约{yuan(main_high - main_low)}宽",
+            )
+        )
+    if main_high < max_amount:
+        bands.append(
+            FundingBand(
+                cash_range=cash_range_label(main_high, max_amount),
+                expected_result="博100股碎股",
+                note="高于主边界，仍看碎股排序",
+            )
+        )
+    return bands
+
+
 def build_funding_bands(
     scenarios: list[ScenarioCalculation],
     funds: Iterable[float],
     secondary_boundary: SecondaryBoundary | None,
+    *,
+    boundary_precision_yuan: float = DEFAULT_BOUNDARY_PRECISION_YUAN,
 ) -> list[FundingBand]:
     calc0 = scenarios[0].calculation
     funds_list = [float(fund) for fund in funds]
@@ -445,6 +505,16 @@ def build_funding_bands(
         max_reference = max(max_reference, secondary_threshold)
     if max_reference <= 0:
         return []
+
+    all_caps_below_regular = all(
+        scenario.calculation.cap_below_100_regular_threshold is True for scenario in scenarios
+    )
+    if max_amount is not None and secondary_boundary is not None and all_caps_below_regular:
+        return compact_secondary_funding_bands(
+            max_amount=max_amount,
+            secondary_boundary=secondary_boundary,
+            precision_yuan=boundary_precision_yuan,
+        )
 
     points: list[float] = [0.0, max_reference]
     if secondary_boundary is not None:
@@ -468,9 +538,6 @@ def build_funding_bands(
 
     points = unique_sorted_points(points)
     bands: list[FundingBand] = []
-    all_caps_below_regular = all(
-        scenario.calculation.cap_below_100_regular_threshold is True for scenario in scenarios
-    )
 
     for low, high in zip(points, points[1:]):
         if high <= low:
@@ -556,6 +623,12 @@ def parse_args() -> argparse.Namespace:
         nargs=3,
         metavar=("LOW", "MID", "HIGH"),
         help="internal secondary-allocation boundary estimates; output is compressed into simple funding bands",
+    )
+    parser.add_argument(
+        "--boundary-precision-yuan",
+        type=float,
+        default=DEFAULT_BOUNDARY_PRECISION_YUAN,
+        help="preferred width for the main secondary-allocation boundary band; default 200000",
     )
     parser.add_argument("--json", action="store_true", help="output JSON")
 
@@ -671,7 +744,12 @@ def main() -> int:
     print("## 资金区间参考")
     print("| 资金区间 | 预计结果 | 说明 |")
     print("|---:|---|---|")
-    for band in build_funding_bands(scenarios, args.funds_yuan, secondary_boundary):
+    for band in build_funding_bands(
+        scenarios,
+        args.funds_yuan,
+        secondary_boundary,
+        boundary_precision_yuan=args.boundary_precision_yuan,
+    ):
         print(
             f"| {band.cash_range} | {band.expected_result} | {band.note} |"
         )

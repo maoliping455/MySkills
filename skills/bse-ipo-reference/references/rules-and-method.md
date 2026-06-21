@@ -173,7 +173,7 @@ In a triggered case:
 
 Do not hard-code secondary-allocation boundaries such as `500万` or `520万`. Infer a fresh boundary for each IPO, then simplify the final table for users.
 
-Do not widen the boundary range merely to maximize apparent accuracy. Recent backtests of the regular-share threshold show that current-regime error is usually much tighter than old-regime history: use this as a precision discipline, not as a promise. In normal 2025/2026-style conditions, aim for a main actionable boundary around `8%-12%` wide; if uncertainty is wider than that, split the table into multiple rows rather than one broad catch-all range.
+Do not widen the boundary range merely to maximize apparent accuracy. Recent backtests of the regular-share threshold show that current-regime error is usually much tighter than old-regime history: use this as a precision discipline, not as a promise. In normal 2025/2026-style conditions, and when at least two credible secondary-boundary estimates cluster, aim for a main actionable boundary around the `20万`量级. This is a target precision, not a hard cap. If uncertainty is wider than that, keep the main boundary near the consensus midpoint and push the rest into lower-confidence rows; if evidence is weak or scattered, widen the band and explain why it cannot be responsibly narrowed.
 
 Use three evidence layers:
 
@@ -197,12 +197,13 @@ Interpret supply pressure qualitatively:
 - If community estimates are scattered, widen `secondary_low-high` rather than pretending to know a precise cutoff.
 - If evidence is weak, say the boundary is uncertain and keep the funding bands broad.
 
-In final output, do not expose the full internal model unless the user asks. Collapse it into simple user-facing bands:
+In final output, do not expose the full internal model unless the user asks. For a pure碎股盘 where top subscription is below the 100-share regular threshold, collapse it into simple user-facing bands:
 
-- `< secondary_low`: `预计0股`
-- `secondary_low - secondary_mid`: `低位试探碎股`
-- `secondary_mid - secondary_high`: `边界博碎股`
-- `secondary_high - 顶格`: `博100股碎股`
+- `< main_low`: `预计0股/低位试探`
+- `main_low - main_high`: `边界博碎股`, where `main_high - main_low` should normally be around the `20万`量级 when evidence supports it
+- `main_high - 顶格`: `博100股碎股`
+
+If regular-share thresholds are reachable, regular-share bands take priority and should still list each `100股/200股/300股...` tier.
 
 Use these precision rules:
 

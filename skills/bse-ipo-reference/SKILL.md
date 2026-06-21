@@ -37,9 +37,10 @@ Never promise profit, guaranteed allotment, or capital safety. Do not help struc
    - Do not call a cash band "稳正股" unless it clears the crowded scenario's regular-share threshold; otherwise label it as a boundary or scenario-split result.
    - Use `--scenario-yi "情景:预计网上申购金额亿元:概率数字"` so the output can show different amount assumptions and their result probabilities.
    - Do not hard-code boundary amounts such as `500万` or `520万`. Derive the secondary-allocation boundary from recent BSE result data, community estimate clusters, and current-IPO supply pressure.
-   - Do not make the boundary band wide just to look safer. Balance hit rate and precision: output a low/mid/high boundary, split wide uncertainty into `低位试探碎股`, `边界博碎股`, and `博100股碎股`, and make the mid-high band the main actionable range.
+   - Do not make the boundary band wide just to look safer. Balance hit rate and precision: infer a low/mid/high boundary internally, but when at least two credible estimates cluster, compress the main actionable secondary-allocation boundary toward a `20万`量级 range, usually around `mid-10万` to `mid+10万`. Treat this as a target precision, not a hard cap. If evidence is weak or scattered, widen the band and explain why it cannot be responsibly narrowed.
    - Weight newer data more heavily. Use 2025-2026 and the latest 60-90 days as the main calibration window; treat 2020-2023 data as regime history rather than a direct tuning target unless market conditions clearly match.
    - When boundary evidence is available, pass `--secondary-boundary-yuan 低位 中位 高位`; the script keeps the internal model but outputs simple user-facing bands.
+   - When analyzing a pure secondary-allocation case where the subscription cap is below the 100-share regular threshold, use the calculator's default `20万`量级 main-boundary precision as a starting point. Do not output broad rows such as `500-550万` as the main decision band unless evidence is too scattered and you explicitly say so.
    - Regular-allotment thresholds take priority over secondary-allocation boundaries. Once a funding band reaches the 100-share regular threshold, label it as regular shares, not just 碎股.
    - For regular allotment bands, list each 100-share tier that is reachable before the subscription cap: `100股`, `200股`, `300股`, and so on. Do not compress reachable regular tiers into a generic `多手` label.
    - If the subscription cap exactly reaches a higher regular-share tier, include one exact `=顶格` row for that edge case.
@@ -85,6 +86,12 @@ For secondary-allocation modeling, pass a community or historical estimate:
 
 ```bash
 python scripts/bse_ipo_calculator.py ... --secondary-boundary-yuan 2800000 3150000 3400000
+```
+
+For historical model checks in the local recommender project:
+
+```bash
+PYTHONPATH=src python -m bse_ipo_recommender backtest-targets --from-date 2026-01-01 --offline
 ```
 
 ## Output Template
