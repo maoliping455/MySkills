@@ -106,6 +106,25 @@ For each scenario, show:
 
 Use recent issue-result announcements as anchors. Community data can help estimate `F` and secondary-allocation thresholds, but keep it separated from verified data.
 
+When reading community articles, classify each number before using it:
+
+- Current IPO forecast: phrases such as `预计/预估/预测/约/左右` tied to the current IPO's online subscription amount.
+- Top-subscription break-even value: the total subscription amount where顶格正好失去100股正股. Use it as a decision boundary, not as a forecast.
+- Comparable actual value: a recent IPO's actual frozen funds or allotment rate. Use it as history, not as a community forecast for the current IPO.
+- Reposted duplicate: same URL/title/value or the same estimate repeated across mirrors. Count it once.
+
+If a community value is within about `0.5%` of the computed顶格正股临界总申购金额, treat it as a boundary unless the text clearly says it is the author's forecast. If a value matches a recent comparable IPO's actual result and that IPO is named nearby, do not use it as a current-IPO forecast.
+
+## Backtesting And Regime Weighting
+
+When improving the method, backtest with actual result announcements, but do not fit all years equally.
+
+- Use the latest 60-90 days and the current year as the primary calibration window.
+- Use the prior year as the secondary robustness check.
+- Use 2020-2023 mainly as regime history and stress testing; BSE participation and subscription heat changed materially, so old errors should not dominate current parameters.
+- Prefer rules that improve 2025/2026 and latest-window error without creating obvious false positives. Do not tune a threshold only because it fixes one historical outlier.
+- Track at least these diagnostics: predicted vs actual online subscription amount, absolute percentage error, bias, 100股/200股/300股 threshold hit, and whether top subscription was misclassified as regular shares or only碎股.
+
 ## Crowded Scenario Guard
 
 Do not let the base historical estimate dominate a hot IPO. Add a crowded protection scenario before giving funding advice.
@@ -135,10 +154,19 @@ When scenarios disagree on the regular-share tier, show the resulting range dire
 
 ## Small-Issue Cooling Check
 
-Before applying a crowded guard, check whether the IPO is materially smaller than recent samples. If both the top subscription cash and online issue shares are far below recent levels, do not lift the estimate just because the recent market is hot or valuation looks cheap. In that case:
+Before applying a crowded guard, check whether the IPO is materially smaller than recent samples. If both the top subscription cash and online issue shares are far below or near the lower tail of recent levels, do not lift the estimate just because the recent market is hot or valuation looks cheap.
+
+Use this as a practical trigger:
+
+- Clear small issue: top subscription cash below about `800万元` and online issue shares below about `800万股`.
+- Near-small issue: top subscription cash below about `1000万元` and online issue shares below about `1200万股`.
+- Do not use this check when only one side is small; single-sided supply or cap pressure is not enough.
+
+In a triggered case:
 
 - Pull the base `F` toward small-size comparable IPOs.
 - Keep the generic buffer small unless community estimates cluster high.
+- For near-small rather than clear-small issues, keep a modest decision buffer around `10%-18%` when translating `F` into funding bands, sized by how far the cooled estimate diverges from regular recent-history anchors. This avoids presenting a boundary top-subscription case as stable regular shares.
 - Treat the result as a碎股/顶格博弈 problem if the regular threshold remains above the subscription cap.
 
 ## Dynamic Secondary Boundary
