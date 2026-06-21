@@ -1,0 +1,4 @@
+interface:
+  display_name: "北交所打新参考"
+  short_description: "北交所打新情景概率、资金区间、正股与碎股测算"
+  default_prompt: "Use $bse-ipo-reference to analyze 北交所新股申购情景概率、资金区间 and expected allotment."
