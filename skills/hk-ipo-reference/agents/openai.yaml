@@ -1,0 +1,4 @@
+interface:
+  display_name: "港股打新复盘"
+  short_description: "港股 IPO 推荐、融资核价、P0 证据包/补采、回测复盘与专家闸门"
+  default_prompt: "Use $hk-ipo-reference to run a 2026-led HK IPO backtest review, audit pre-close leakage and stability, generate the P0 evidence pack plus consolidated worksheet, run the expert-readiness gate, generate a P0 public research ledger from its backlog, run the P0 evidence pipeline, close evidence gaps, and only then decide whether current recommendation or financing rules can be adjusted."
